@@ -5,7 +5,7 @@ import { Generator } from "./generator"
 import { Section } from "./section"
 
 export class Game implements GameLoop {
-  readonly speed = 40;
+  readonly speed = 120;
   generator: Generator;
   sections: Section[] = [];
   canvasWidth: number;
@@ -37,7 +37,7 @@ export class Game implements GameLoop {
 
     // Create new sections at the bottom of the screen
     let lowestSection = this.sections[this.sections.length - 1];
-    let lowestPosition: number = lowestSection.y + lowestSection.height;
+    let lowestPosition: number = lowestSection.y;
     if (lowestPosition < this.canvasHeight) {
       this.newSection(this.canvasWidth, this.canvasHeight);
     }
@@ -55,8 +55,16 @@ export class Game implements GameLoop {
 
   newSection(canvasWidth: number, canvasHeight: number): void {
     let section = this.generator.getNext();
-    section.x = canvasWidth / 2;
-    section.y = canvasHeight;
+    if (this.sections.length > 0) {
+      let currentSection = this.sections[this.sections.length - 1];
+      section.x = currentSection.x + currentSection.nextJoinX
+          - section.prevJoinX;
+      section.y = currentSection.y + currentSection.nextJoinY
+          - section.prevJoinY;
+    } else {
+      section.x = canvasWidth / 2;
+      section.y = canvasHeight;
+    }
     this.sections.push(section);
   }
 }
