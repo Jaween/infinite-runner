@@ -1,73 +1,56 @@
 import { GameObject } from "../../engine/game_object";
+import { Sprite } from "../../engine/sprite";
 
 export enum Type
 {
   Down,
   Left,
   Right,
-  DownLeft,
-  DownRight,
-  LeftDown,
-  RightDown,
-  LeftRight,
-  RightLeft
 }
 
-export class Section extends GameObject
-{
+export class Section extends GameObject {
+  public static pathLength: number = 36;
+
   public type: Type;
   public prevJoinX: number;
   public prevJoinY: number;
   public nextJoinX: number;
   public nextJoinY: number;
+  public nextSection: Section = undefined;
 
-  constructor(filename: string, type: Type)
-  {
-    super(filename);
+  private readonly downFile = "app/game/resources/images/section_down.png";
+  private readonly angleFile = "app/game/resources/images/section_angle.png";
+
+  constructor(type: Type) {
+    super();
+
     this.type = type;
     switch (type) {
       case Type.Down:
         this.prevJoinX = 32;
         this.prevJoinY = 0;
         this.nextJoinX = 32;
-        this.nextJoinY = 64;
+        this.nextJoinY = 36;
+        this.addSpriteFromFile(this.downFile);
         break;
       case Type.Left:
-        this.prevJoinX = 69;
-        this.prevJoinY = 23;
-        this.nextJoinX = 23;
-        this.nextJoinY = 69;
+        this.prevJoinX = 75;
+        this.prevJoinY = 18;
+        this.nextJoinX = 25;
+        this.nextJoinY = 54;
+        this.addSpriteFromFile(this.angleFile);
         break;
       case Type.Right:
-        this.prevJoinX = 23;
-        this.prevJoinY = 23;
-        this.nextJoinX = 69;
-        this.nextJoinY = 69;
-        break;
-      case Type.DownLeft:
-        this.prevJoinX = 61;
-        this.prevJoinY = 0;
-        this.nextJoinX = 23;
-        this.nextJoinY = 69;
-        break;
-      case Type.DownRight:
-        this.prevJoinX = 31;
-        this.prevJoinY = 0;
-        this.nextJoinX = 69;
-        this.nextJoinY = 69;
-        break;
-      case Type.LeftDown:
-        this.prevJoinX = 69;
-        this.prevJoinY = 23;
-        this.nextJoinX = 32;
-        this.nextJoinY = 110;
-        break;
-      case Type.RightDown:
-        this.prevJoinX = 23;
-        this.prevJoinY = 23;
-        this.nextJoinX = 61;
-        this.nextJoinY = 110;
+        this.prevJoinX = 25;
+        this.prevJoinY = 18;
+        this.nextJoinX = 75;
+        this.nextJoinY = 54;
+        this.addSpriteFromFile(this.angleFile);
         break;
     }
+  }
+
+  update(deltaSeconds: number): void {
+
   }
 }
