@@ -15,7 +15,7 @@ export class Player extends GameObject {
   private section: Section;
   private sectionStartTime: number = 0;
 
-  private readonly initialJumpVelocity: number = -500;
+  private readonly initialJumpVelocity: number = -450;
   private gravity: number = 1400;
   private jumpPosition: number = 0;
   private jumpVelocity: number = 0;
@@ -42,12 +42,13 @@ export class Player extends GameObject {
   update(deltaSeconds: number) {
     // Catches the player up to the current section due to any lag
     let secsSinceStartOfSection = (Date.now() - this.sectionStartTime) / 1000;
-    let secsPerSection = Section.pathVerticalLength / this.speed;
+    let secsPerSection = this.section.pathVerticalLength / this.speed;
     while (secsSinceStartOfSection >= secsPerSection) {
       this.setSection(this.section.nextSection);
       let additional = (secsSinceStartOfSection - secsPerSection) * 1000;
       this.sectionStartTime -= additional;
       secsSinceStartOfSection -= secsPerSection;
+      secsPerSection = this.section.pathVerticalLength / this.speed;
     }
 
     // Each section has a path that the player appears to travel along. Since

@@ -3,13 +3,16 @@ import { Section } from "./section"
 import { Type } from "./section"
 
 export class Level extends GameObject {
+  private readonly levelPadding = 100;
+  private readonly minWidth = 300;
+  private readonly minHeight = 300;
   private speed: number;
   private current: Section = undefined;
   private weights: number[][];
   private weightSums: number[] = [];
   private sections: Section[] = [];
   private previousTwoSections: Section[] = [];
-  private pathHorizontalPos;
+  private typeBeforeSpace: Type;
 
   constructor(width: number, height: number, speed: number) {
     super();
@@ -18,11 +21,19 @@ export class Level extends GameObject {
     this.height = height;
     this.speed = speed;
 
+    if (width < this.minWidth || height < this.minHeight) {
+      throw new Error("Level dimensions of (" + width + ", " + height +
+        ") are smaller than minimium of (" + this.minWidth + ", " +
+        this.minHeight + ")");
+    }
+
     this.weights = [
-       //D   L   R   S
-       [ 3,  2,  2 ], // Down
-       [ 2,  3,  0 ], // Left
-       [ 2,  0,  3 ], // Right
+       //D   L   R   S   DS
+       [ 4,  2,  2,  1,  1 ], // Down
+       [ 2,  4,  0,  1,  1 ], // Left
+       [ 2,  0,  4,  1,  1 ], // Right
+       [ 0,  0,  0,  0,  0 ], // Space
+       [ 0,  0,  0,  0,  0 ], // Double space
     ];
 
     // Sums each row
@@ -33,10 +44,7 @@ export class Level extends GameObject {
       };
     };
 
-    this.pathHorizontalPos = width / 2;
-
-    this.current = this.getNext();
-    this.sections.push(this.current);
+    this.generateSection();
   }
 
   update(deltaSeconds: number): void {
@@ -57,7 +65,7 @@ export class Level extends GameObject {
     while (true) {
       let lowestSection = this.sections[this.sections.length - 1];
       if (lowestSection.y < this.height) {
-        this.sections.push(this.getNext());
+        this.generateSection();
       } else {
         break;
       }
@@ -70,45 +78,58 @@ export class Level extends GameObject {
     }
   }
 
-  private getNext(): Section {
+  private generateSection() {
     // Initial section
     if (this.current == undefined) {
-      let section = new Section(Type.Right);
-      this.setSectionPosition(undefined, section);
-      return section;
+      this.current = new Section(Type.Right, undefined);
+      this.setSectionPosition(undefined, this.current);
+      this.sections.push(this.current);
+      return;
     }
 
     let previous = this.current;
     
-    let nextType = this.randomWeightedInt(this.weights[previous.type],
-        this.weightSums[previous.type]);
-
-    // Locks the sections to be within the canvas horizontally
-    if (nextType != Type.Down) {
-      if ((nextType == Type.Left && this.pathHorizontalPos - 64 <= 0) ||
-          (nextType == Type.Right && this.pathHorizontalPos + 64 >= this.width)) {
-        nextType = Type.Down;
+    while (true) {
+      let nextType;
+      if (previous.type == Type.Space || previous.type == Type.DoubleSpace) {
+        nextType = this.typeBeforeSpace;
+      } else {
+        nextType = this.randomWeightedInt(this.weights[previous.type],
+          this.weightSums[previous.type]);
       }
+
+      if (nextType == Type.Space || nextType == Type.DoubleSpace) {
+        this.typeBeforeSpace = previous.type;
+      }
+
+      this.current = new Section(nextType, previous.type);
+      this.setSectionPosition(previous, this.current);
+
+      // Locks the sections to be within the canvas horizontally
+      let sectionWidth = this.levelPadding;
+      switch (nextType) {
+        case Type.Left:
+        case Type.Right:
+          sectionWidth += this.current.pathHorizontalLength;
+          break;
+        case Type.Space:
+          sectionWidth += this.current.pathHorizontalLength * 2;
+          break;
+        case Type.DoubleSpace:
+          sectionWidth += this.current.pathHorizontalLength * 3;
+          break;
+      }
+
+      if (this.current.x - sectionWidth <= 0 ||
+         this.current.x + sectionWidth > this.width) {
+        continue;
+      }
+
+      break;
     }
 
-    switch (nextType) {
-      case Type.Down:
-        this.current = new Section(Type.Down);
-        break;
-      case Type.Left:
-        this.current = new Section(Type.Left);
-        this.pathHorizontalPos -= 64;
-        break;
-      case Type.Right:
-        this.current = new Section(Type.Right);
-        this.pathHorizontalPos += 64;
-        break;
-    }
-
-    this.setSectionPosition(previous, this.current);
     previous.nextSection = this.current;
-
-    return this.current;
+    this.sections.push(this.current);
   }
 
   public getCurrentSection(): Section {
@@ -121,7 +142,7 @@ export class Level extends GameObject {
       current.y = previous.y + previous.nextJoinY - current.prevJoinY;
     } else {
       current.x = this.width / 2;
-      current.y = 120;
+      current.y = this.height / 3;
     }
   }
 

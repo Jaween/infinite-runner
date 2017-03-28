@@ -6,7 +6,7 @@ import { Player } from "./player"
 import { Section } from "./section"
 
 export class Game implements GameLoop {
-  readonly speed = 120;
+  readonly speed = 150;
   player: Player;
   level: Level;
   canvasWidth: number;
@@ -20,11 +20,11 @@ export class Game implements GameLoop {
     this.canvasWidth = canvas.width;
     this.canvasHeight = canvas.height;
 
-    this.player.x = canvas.width / 2;
-    this.player.y = 40;
-
     this.level = new Level(canvas.width, canvas.height, this.speed);
     this.player.setSection(this.level.getCurrentSection());
+    this.player.x = this.level.getCurrentSection().x;
+    this.player.y = this.level.getCurrentSection().y +
+        this.level.getCurrentSection().prevJoinY;
   }
 
   update(deltaSeconds: number) {
