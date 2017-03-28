@@ -1,3 +1,4 @@
+import { Debug } from "./debug";
 import { GameObject } from "../../engine/game_object";
 import { Sprite } from "../../engine/sprite";
 
@@ -9,7 +10,7 @@ export enum Type
 }
 
 export class Section extends GameObject {
-  public static pathLength: number = 36;
+  public static pathVerticalLength: number = 32;
 
   public type: Type;
   public prevJoinX: number;
@@ -27,24 +28,24 @@ export class Section extends GameObject {
     this.type = type;
     switch (type) {
       case Type.Down:
-        this.prevJoinX = 32;
-        this.prevJoinY = 0;
-        this.nextJoinX = 32;
-        this.nextJoinY = 36;
+        this.prevJoinX = 0;
+        this.prevJoinY = -16;
+        this.nextJoinX = 0;
+        this.nextJoinY = 16;	;
         this.addSpriteFromFile(this.downFile);
         break;
       case Type.Left:
-        this.prevJoinX = 75;
-        this.prevJoinY = 18;
-        this.nextJoinX = 25;
-        this.nextJoinY = 54;
+        this.prevJoinX = 24;
+        this.prevJoinY = -16;
+        this.nextJoinX = -24;
+        this.nextJoinY = 16;
         this.addSpriteFromFile(this.angleFile);
         break;
       case Type.Right:
-        this.prevJoinX = 25;
-        this.prevJoinY = 18;
-        this.nextJoinX = 75;
-        this.nextJoinY = 54;
+        this.prevJoinX = -24;
+        this.prevJoinY = -16;
+        this.nextJoinX = 24;
+        this.nextJoinY = 16;
         this.addSpriteFromFile(this.angleFile);
         break;
     }
@@ -52,5 +53,16 @@ export class Section extends GameObject {
 
   update(deltaSeconds: number): void {
 
+  }
+
+  draw(context) {
+    super.draw(context);
+
+    if (Debug.pathEnabled) {
+      context.beginPath();
+      context.moveTo(this.x + this.prevJoinX, this.y + this.prevJoinY);
+      context.lineTo(this.x + this.nextJoinX, this.y + this.nextJoinY);
+      context.stroke();
+    }
   }
 }

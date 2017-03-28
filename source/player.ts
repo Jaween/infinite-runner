@@ -1,6 +1,7 @@
 import { GameObject } from "../../engine/game_object";
-import { Section } from "./section";
 import { Sprite } from "../../engine/sprite";
+
+import { Section } from "./section";
 import { Type } from "./section";
 
 
@@ -13,9 +14,9 @@ export class Player extends GameObject {
 
   constructor(speed: number) {
     super();
-    this.downSprite = 
+    this.downSprite =
         this.addSpriteFromFile("app/game/resources/images/player_down.png");
-    this.angleSprite = 
+    this.angleSprite =
         this.addSpriteFromFile("app/game/resources/images/player_angle.png");
     this.speed = speed;
   }
@@ -32,37 +33,32 @@ export class Player extends GameObject {
         this.currentSprite = this.downSprite;
         break;
       case Type.Left:
-        this.x -= this.speed * deltaSeconds;
         this.currentSprite = this.angleSprite;
         break;
       case Type.Right:
-        this.x += this.speed * deltaSeconds;
         this.currentSprite = this.angleSprite;
         break;
     }
     
+    // Catches the player up to the current section due to any lag
     let secsSinceStartOfSection = (Date.now() - this.sectionStartTime) / 1000;
-    let secsPerSection = Section.pathLength / this.speed;
-    let t = Math.max(Math.min(secsSinceStartOfSection/secsPerSection, 1), 0);
-
-    this.x =
-        this.section.x +
-        this.section.prevJoinX + 
-        t * (this.section.nextJoinX - this.section.prevJoinX) -
-        this.width / 2;
-
-    /*this.y =
-        this.section.y +
-        this.section.prevJoinY +
-        t * (this.section.nextJoinY - this.section.prevJoinY) -
-        90;*/
-
-    // Catches up to the current section
+    let secsPerSection = Section.pathVerticalLength / this.speed;
     while (secsSinceStartOfSection >= secsPerSection) {
       this.setSection(this.section.nextSection);
       let additional = (secsSinceStartOfSection - secsPerSection) * 1000;
       this.sectionStartTime -= additional;
       secsSinceStartOfSection -= secsPerSection;
     }
+
+    // Each section has a path that the player appears to travel along. Since
+    // we know the vertical component of each path and the speed at which the
+    // sections move upwards, we simply have to interpolate the x position of
+    // the player. So when the player is at the top of the section, the player
+    // is put on one side of the section. When the player is at the bottom of
+    // the section, the player is put on the other side of the section.
+    let t = Math.max(Math.min(secsSinceStartOfSection/secsPerSection, 1), 0);
+    let pathHorizontalLength = this.section.nextJoinX - this.section.prevJoinX;
+    let startPositionX = this.section.x + this.section.prevJoinX;
+    this.x = startPositionX + t * pathHorizontalLength;
   }
 }
